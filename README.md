@@ -75,4 +75,3 @@ python compare_embeddings.py
 └── requirements.txt      # Python dependencies
 ```
 
-Based on the tutorial: [RAG+Langchain Python Project: Easy AI/Chat For Your Docs](https://www.youtube.com/watch?v=tcqEUSNCn8I&ab_channel=pixegami).
