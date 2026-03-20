@@ -19,6 +19,7 @@ app.add_middleware(
 
 CHROMA_PATH = "chroma"
 UPLOAD_FOLDER = "uploads"
+LLM_MODE = os.getenv("LLM_MODE", "extractive").strip().lower()
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(CHROMA_PATH, exist_ok=True)
@@ -109,12 +110,35 @@ Answer the question based only on the following context:
 Answer the question based on the above context: {question}
 """
 
+
+def build_answer(question: str, context_text: str) -> str:
+    """Generate an answer using configured mode; fallback to extractive for cloud deploys."""
+    if LLM_MODE == "ollama":
+        try:
+            from langchain_ollama import ChatOllama
+            from langchain_core.prompts import ChatPromptTemplate
+
+            prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+            prompt = prompt_template.format(context=context_text, question=question)
+            model = ChatOllama(model="llama3.2")
+            return model.invoke(prompt).content
+        except Exception as e:
+            print(f"Ollama unavailable, falling back to extractive mode: {e}")
+
+    # Deployment-safe fallback: return concise answer derived from retrieved context.
+    top_chunk = context_text.split("\n\n---\n\n")[0].strip()
+    if len(top_chunk) > 1200:
+        top_chunk = top_chunk[:1200] + "..."
+    return (
+        "Answer (extractive mode):\n"
+        f"Based on the document, the most relevant information for '{question}' is:\n\n"
+        f"{top_chunk}"
+    )
+
 @app.post("/query")
 async def query_document(request: QueryRequest):
     try:
         from langchain_chroma import Chroma
-        from langchain_ollama import ChatOllama
-        from langchain_core.prompts import ChatPromptTemplate
 
         print(f"Query: {request.question}")
 
@@ -131,14 +155,8 @@ async def query_document(request: QueryRequest):
         sources = list(set([doc.metadata.get("source", "Unknown") for doc, _ in results]))
         relevance_scores = [round(float(score), 4) for _, score in results]
 
-        # Generate answer using Ollama
-        prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-        prompt = prompt_template.format(context=context_text, question=request.question)
-
-        print("Calling Ollama LLM...")
-        model = ChatOllama(model="llama3.2")
-        answer = model.invoke(prompt).content
-        print("✓ Answer generated")
+        answer = build_answer(request.question, context_text)
+        print(f"✓ Answer generated with mode: {LLM_MODE}")
 
         return {
             "question": request.question,

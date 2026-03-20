@@ -330,7 +330,9 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000';
+        const API_URL = window.location.origin && window.location.origin.startsWith('http')
+            ? window.location.origin
+            : 'http://localhost:8000';
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const uploadStatus = document.getElementById('uploadStatus');
@@ -353,7 +355,7 @@
             } catch (error) {
                 console.error('✗ Cannot connect to API:', error);
                 uploadStatus.classList.remove('hidden');
-                uploadStatus.textContent = '⚠️ Error: Backend API is not running. Please start the server with: python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000';
+                uploadStatus.textContent = '⚠️ Error: Backend API is not reachable. For local run: python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000';
                 uploadStatus.classList.remove('success', 'info');
                 uploadStatus.classList.add('error');
                 return false;
@@ -419,7 +421,7 @@
                 queryInput.disabled = false;
                 queryBtn.disabled = false;
             } catch (error) {
-                uploadStatus.textContent = `✗ Error: ${error.message}. Make sure the backend is running on http://localhost:8000`;
+                uploadStatus.textContent = `✗ Error: ${error.message}. Make sure backend is reachable at ${API_URL}`;
                 uploadStatus.classList.remove('info', 'success');
                 uploadStatus.classList.add('error');
                 console.error('Upload error:', error);
@@ -455,7 +457,7 @@
                 resultsSection.style.display = 'block';
             } catch (error) {
                 console.error('Query error:', error);
-                results.innerHTML = `<div class="status error">✗ ${error.message}. Make sure backend is running on http://localhost:8000</div>`;
+                results.innerHTML = `<div class="status error">✗ ${error.message}. Make sure backend is reachable at ${API_URL}</div>`;
                 resultsSection.style.display = 'block';
             } finally {
                 loading.classList.remove('active');
