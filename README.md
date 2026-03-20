@@ -1,77 +1,147 @@
-# LangChain RAG Tutorial
+# Document Q&A — RAG Application
 
-A Retrieval-Augmented Generation (RAG) pipeline that lets you ask natural language questions about your documents and get AI-generated answers with source citations. Runs **100% locally** with no API costs.
+Ask natural language questions about your documents and get AI-generated answers with source citations. Runs **100% locally** — no API keys or costs.
 
 ## Tech Stack
 
-- **LangChain** — Orchestrates the RAG pipeline
-- **ChromaDB** — Vector database for storing document embeddings
-- **HuggingFace** (all-MiniLM-L6-v2) — Free, local text embeddings
-- **Ollama** (LLaMA 3.2) — Free, local LLM for answer generation
+| Layer | Technology |
+|---|---|
+| Backend API | FastAPI + Uvicorn |
+| RAG Framework | LangChain |
+| Vector Database | ChromaDB |
+| Embeddings | HuggingFace `all-MiniLM-L6-v2` (local, free) |
+| LLM | Ollama `llama3.2` (local, free) |
+| Frontend | HTML / CSS / JavaScript |
+
+## Prerequisites
+
+- Python 3.10+
+- [Ollama](https://ollama.com/download) installed
 
 ## Setup
 
-### 1. Install Ollama
-
-Download and install from [ollama.com/download](https://ollama.com/download), then pull the model:
+### 1. Clone the repo
 
 ```bash
-ollama pull llama3.2
+git clone https://github.com/ritwik1709/langchain-rag-tutorial.git
+cd langchain-rag-tutorial
 ```
 
-### 2. Install Python Dependencies
+### 2. Create and activate a virtual environment
+
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# Mac/Linux
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Install Markdown Dependencies
+### 4. Pull the Ollama model
 
 ```bash
-pip install "unstructured[md]"
+ollama pull llama3.2
 ```
 
-## Usage
+> First-time setup will also download the HuggingFace embedding model (~90MB) automatically on first run.
 
-### Create the Database
+## Running the Web App
 
-Load your documents, split them into chunks, generate embeddings, and store in ChromaDB:
+**Windows:**
+```bash
+run.bat
+```
 
+**Mac/Linux:**
+```bash
+bash run.sh
+```
+
+**Or manually:**
+```bash
+.venv/Scripts/python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
+
+Then open **http://localhost:8000** in your browser.
+
+## Using the Web App
+
+1. **Upload** — drag and drop or click to upload a `.txt` or `.md` file
+2. **Ask** — type your question and press Enter or click "Search Document"
+3. **Results** — see the AI-generated answer, relevance scores, and source file
+
+## CLI Usage (Alternative)
+
+You can also run the pipeline directly from the terminal.
+
+**Build the database from files in `data/books/`:**
 ```bash
 python create_database.py
 ```
 
-### Query the Database
-
-Ask questions about your documents:
-
+**Query the database:**
 ```bash
 python query_data.py "How does Alice meet the Mad Hatter?"
 ```
 
-### Compare Embeddings
-
-Test embedding similarity between words:
-
+**Compare word embeddings:**
 ```bash
 python compare_embeddings.py
 ```
 
-## Using Your Own Data
+## Using Your Own Documents
 
-1. Place your `.md` files in the `data/books/` directory
+1. Place your `.txt` or `.md` files in `data/books/`
 2. Run `python create_database.py` to rebuild the vector database
-3. Query with `python query_data.py "your question here"`
+3. Query via the web app or CLI
 
 ## Project Structure
 
 ```
-├── create_database.py    # Loads, chunks, and embeds documents into ChromaDB
-├── query_data.py         # Queries the vector DB and generates answers via Ollama
-├── compare_embeddings.py # Utility to compare word embeddings
-├── test_load.py          # Test script to verify document loading
-├── data/books/           # Source documents (Markdown files)
-├── chroma/               # Vector database (auto-generated, gitignored)
-└── requirements.txt      # Python dependencies
+├── app.py                 # FastAPI backend (REST API + serves frontend)
+├── index.html             # Frontend UI
+├── create_database.py     # CLI — build vector DB from documents
+├── query_data.py          # CLI — query the vector DB
+├── compare_embeddings.py  # Utility — compare word embedding similarity
+├── test_load.py           # Utility — verify document loading works
+├── run.bat                # Windows startup script
+├── run.sh                 # Mac/Linux startup script
+├── requirements.txt       # Python dependencies
+├── data/books/            # Source documents (.txt / .md)
+├── uploads/               # Documents uploaded via web UI
+└── chroma/                # Vector database (auto-generated, gitignored)
 ```
 
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Serves the web UI |
+| `GET` | `/health` | Health check |
+| `GET` | `/status` | Check if DB is ready |
+| `POST` | `/upload` | Upload and process a document |
+| `POST` | `/query` | Ask a question about the document |
+
+Full interactive docs: **http://localhost:8000/docs**
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `ollama: command not found` | Restart terminal after installing Ollama |
+| `Connection refused` on query | Run `ollama serve` in a separate terminal |
+| Slow first run | HuggingFace model downloading (~90MB, one-time) |
+| `Please upload a document first` | Upload a file via the UI before querying |
+| Module import error | Run `pip install -r requirements.txt` |
+
+---
+
+Based on: [RAG+Langchain Python Project: Easy AI/Chat For Your Docs](https://www.youtube.com/watch?v=tcqEUSNCn8I&ab_channel=pixegami)

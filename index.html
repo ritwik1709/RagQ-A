@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Q&A - Professional Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #f0f1ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8e9ff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .query-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+
+        .query-section input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .results-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .result-item {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item.hidden {
+            display: none;
+        }
+
+        .result-question {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .result-answer {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .result-meta {
+            font-size: 0.9rem;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 10px;
+        }
+
+        .score {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-size: 0.85rem;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-name {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            color: #2e7d32;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 Document Q&A Assistant</h1>
+            <p>Upload your document and ask intelligent questions</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>📤 Upload Document</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <p><strong>Drag and drop your file here</strong></p>
+                    <p style="font-size: 0.9rem; color: #999;">or click to browse</p>
+                    <input type="file" id="fileInput" accept=".txt,.md,.pdf" />
+                </div>
+                <div id="uploadStatus" class="status hidden"></div>
+                <div id="fileName" class="file-name hidden"></div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="card">
+                <h2>📊 Document Stats</h2>
+                <div id="stats" style="color: #666;">
+                    <p>No document uploaded yet</p>
+                </div>
+                <div id="dbStatus" style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 8px; display: none;">
+                    <strong>✓ Database Ready</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Section -->
+        <div class="card">
+            <h2>💬 Ask a Question</h2>
+            <input 
+                type="text" 
+                id="queryInput" 
+                placeholder="What is your question about the document?"
+                autocomplete="off"
+            />
+            <button id="queryBtn" onclick="askQuestion()">Search Document</button>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Processing your question...</p>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>🔍 Results</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const fileName = document.getElementById('fileName');
+        const queryInput = document.getElementById('queryInput');
+        const queryBtn = document.getElementById('queryBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const results = document.getElementById('results');
+        const stats = document.getElementById('stats');
+        const dbStatus = document.getElementById('dbStatus');
+
+        // Check if API is available
+        async function checkApiConnection() {
+            try {
+                const response = await fetch(`${API_URL}/`);
+                if (!response.ok) throw new Error('API not responding');
+                console.log('✓ API connected successfully');
+                return true;
+            } catch (error) {
+                console.error('✗ Cannot connect to API:', error);
+                uploadStatus.classList.remove('hidden');
+                uploadStatus.textContent = '⚠️ Error: Backend API is not running. Please start the server with: python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000';
+                uploadStatus.classList.remove('success', 'info');
+                uploadStatus.classList.add('error');
+                return false;
+            }
+        }
+
+        // Drag and drop
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            handleFileUpload();
+        });
+
+        fileInput.addEventListener('change', handleFileUpload);
+
+        async function handleFileUpload() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            uploadStatus.classList.remove('hidden');
+            uploadStatus.textContent = 'Uploading and processing...';
+            uploadStatus.classList.remove('success', 'error');
+            uploadStatus.classList.add('info');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
+                const data = await response.json();
+
+                uploadStatus.textContent = `✓ ${data.message} (${data.chunks} chunks created)`;
+                uploadStatus.classList.remove('error', 'info');
+                uploadStatus.classList.add('success');
+
+                fileName.textContent = `📄 File: ${file.name}`;
+                fileName.classList.remove('hidden');
+
+                stats.innerHTML = `
+                    <p><strong>File:</strong> ${file.name}</p>
+                    <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+                    <p><strong>Chunks:</strong> ${data.chunks}</p>
+                `;
+                dbStatus.style.display = 'block';
+
+                queryInput.disabled = false;
+                queryBtn.disabled = false;
+            } catch (error) {
+                uploadStatus.textContent = `✗ Error: ${error.message}. Make sure the backend is running on http://localhost:8000`;
+                uploadStatus.classList.remove('info', 'success');
+                uploadStatus.classList.add('error');
+                console.error('Upload error:', error);
+            }
+        }
+
+        async function askQuestion() {
+            const question = queryInput.value.trim();
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            loading.classList.add('active');
+            queryBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Query failed');
+                }
+
+                const data = await response.json();
+                displayResults(data);
+                resultsSection.style.display = 'block';
+            } catch (error) {
+                console.error('Query error:', error);
+                results.innerHTML = `<div class="status error">✗ ${error.message}. Make sure backend is running on http://localhost:8000</div>`;
+                resultsSection.style.display = 'block';
+            } finally {
+                loading.classList.remove('active');
+                queryBtn.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            results.innerHTML = `
+                <div class="result-item">
+                    <div class="result-question">Q: ${escapeHtml(data.question)}</div>
+                    <div class="result-answer">${escapeHtml(data.answer)}</div>
+                    <div class="result-meta">
+                        <strong>Relevance Scores:</strong>
+                        ${data.relevance_scores.map(score => 
+                            `<span class="score">${(score * 100).toFixed(1)}%</span>`
+                        ).join(' ')}
+                        <br><strong>Source:</strong> ${data.sources[0]}
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Allow Enter key to submit
+        queryInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') askQuestion();
+        });
+
+        // Check database status on load
+        async function checkDbStatus() {
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                if (data.database_ready) {
+                    dbStatus.style.display = 'block';
+                    queryInput.disabled = false;
+                    queryBtn.disabled = false;
+                }
+            } catch (error) {
+                console.log('Database not ready yet - will be created on first upload');
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            const apiReady = await checkApiConnection();
+            if (apiReady) {
+                checkDbStatus();
+            }
+        });
+    </script>
+</body>
+</html>
